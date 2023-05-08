@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"go-jwt-authentication/database"
 	"go-jwt-authentication/helpers"
 	"go-jwt-authentication/models"
@@ -55,14 +54,14 @@ func Signup() gin.HandlerFunc {
 
 		database.Database.Db.Create(&user)
 
-		accessToken, err := helpers.GenerateAccessToken(&user)
+		accessToken, err := helpers.GenerateToken(&user, "access")
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
-		refreshToken, err := helpers.GenerateRefreshToken(&user)
+		refreshToken, err := helpers.GenerateToken(&user, "refresh")
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -106,13 +105,13 @@ func Login() gin.HandlerFunc {
 			return
 		}
 
-		accessToken, err := helpers.GenerateAccessToken(&user)
+		accessToken, err := helpers.GenerateToken(&user, "access")
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		}
 
-		refreshToken, err := helpers.GenerateRefreshToken(&user)
+		refreshToken, err := helpers.GenerateToken(&user, "refresh")
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -135,7 +134,7 @@ func RefreshToken() gin.HandlerFunc {
 			return
 		}
 
-		claims, err := helpers.VerifyRefreshToken(refreshToken)
+		claims, err := helpers.ValidateToken(refreshToken, "refresh")
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid refresh token"})
 			return
@@ -143,11 +142,9 @@ func RefreshToken() gin.HandlerFunc {
 
 		var user models.User
 
-		fmt.Println(claims.Issuer)
+		database.Database.Db.Where("ID = ?", claims.UserID).First(&user)
 
-		database.Database.Db.Where("email = ?", claims.Issuer).First(&user)
-
-		accessToken, err := helpers.GenerateAccessToken(&user)
+		accessToken, err := helpers.GenerateToken(&user, "access")
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate access token"})
 			return

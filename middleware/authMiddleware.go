@@ -15,7 +15,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		claims, err := helpers.ValidateToken(jwt_token)
+		claims, err := helpers.ValidateToken(jwt_token, "access")
 
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

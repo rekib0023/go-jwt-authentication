@@ -14,8 +14,6 @@ import (
 func main() {
 	helpers.LoadConfig(".env")
 
-	AppConfig := helpers.AppConfig
-
 	database.Connect()
 
 	router := gin.New()
@@ -34,5 +32,5 @@ func main() {
 
 	routes.UserRoutes(router)
 
-	router.Run(":" + AppConfig.PORT)
+	router.Run(":" + helpers.AppConfig.PORT)
 }

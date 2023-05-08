@@ -15,13 +15,24 @@ type Claims struct {
 	jwt.StandardClaims
 }
 
-func GenerateAccessToken(user *models.User) (string, error) {
+func GenerateToken(user *models.User, tokenType string) (string, error) {
+	var expirationTime int64
+	var subject string
+
+	if tokenType == "access" {
+		expirationTime = time.Now().Add(time.Hour * 1).Unix() // expire in 1 hour
+	} else if tokenType == "refresh" {
+		expirationTime = time.Now().Add(time.Hour * 24 * 7).Unix() // expire in 7 days
+		subject = "refresh"
+	}
+
 	claims := &Claims{
 		UserID: user.ID,
 		Email:  user.Email,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Hour * 1).Unix(), // expire in 7 days
-			Issuer:    user.Email,
+			ExpiresAt: expirationTime,
+			Issuer:    "myapp",
+			Subject:   subject,
 		},
 	}
 
@@ -36,29 +47,11 @@ func GenerateAccessToken(user *models.User) (string, error) {
 	return accessToken, nil
 }
 
-func GenerateRefreshToken(user *models.User) (string, error) {
-	claims := &Claims{
-		UserID: user.ID,
-		Email:  user.Email,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Hour * 24 * 7).Unix(), // expire in 7 days
-			Issuer:    user.Email,
-			Subject:   "refresh",
-		},
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
-	refreshToken, err := token.SignedString([]byte(AppConfig.SECRET_KEY))
-	if err != nil {
-		return "", err
-	}
-
-	return refreshToken, nil
-}
-
-func ValidateToken(tokenString string) (*Claims, error) {
+func ValidateToken(tokenString string, tokenType string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("invalid token signing method")
+		}
 		return []byte(AppConfig.SECRET_KEY), nil
 	})
 	if err != nil {
@@ -70,27 +63,8 @@ func ValidateToken(tokenString string) (*Claims, error) {
 		return nil, errors.New("invalid token")
 	}
 
-	return claims, nil
-}
-
-func VerifyRefreshToken(tokenString string) (*jwt.StandardClaims, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("invalid token")
-		}
-		return []byte(AppConfig.SECRET_KEY), nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	claims, ok := token.Claims.(*jwt.StandardClaims)
-	if !ok || !token.Valid {
-		return nil, fmt.Errorf("invalid token")
-	}
-
-	if claims.Subject != "refresh" {
-		return nil, fmt.Errorf("invalid token")
+	if tokenType == "refresh" && claims.Subject != "refresh" {
+		return nil, errors.New("invalid token")
 	}
 
 	return claims, nil

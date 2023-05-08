@@ -8,7 +8,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-type Config struct {
+var AppConfig struct {
 	PORT        string
 	DB_HOST     string
 	DB_PORT     int
@@ -17,8 +17,6 @@ type Config struct {
 	DB_NAME     string
 	SECRET_KEY  string
 }
-
-var AppConfig Config
 
 func LoadConfig(filename string) {
 	err := godotenv.Load(filename)
@@ -34,15 +32,12 @@ func LoadConfig(filename string) {
 
 	db_port, _ := strconv.Atoi(os.Getenv("DB_PORT"))
 
-	config := Config{
-		PORT:        port,
-		DB_HOST:     os.Getenv("DB_HOST"),
-		DB_PORT:     db_port,
-		DB_USER:     os.Getenv("DB_USER"),
-		DB_PASSWORD: os.Getenv("DB_PASSWORD"),
-		DB_NAME:     os.Getenv("DB_NAME"),
-		SECRET_KEY:  os.Getenv("SECRET_KEY"),
-	}
+	AppConfig.PORT = port
+	AppConfig.DB_HOST = os.Getenv("DB_HOST")
+	AppConfig.DB_PORT = db_port
+	AppConfig.DB_USER = os.Getenv("DB_USER")
+	AppConfig.DB_PASSWORD = os.Getenv("DB_PASSWORD")
+	AppConfig.DB_NAME = os.Getenv("DB_NAME")
+	AppConfig.SECRET_KEY = os.Getenv("SECRET_KEY")
 
-	AppConfig = config
 }
