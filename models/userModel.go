@@ -9,5 +9,5 @@ type User struct {
 	FirstName string `json:"first_name" validate:"required"`
 	LastName  string `json:"last_name" validate:"required"`
 	Email     string `gorm:"unique" json:"email" validate:"required,email"`
-	Password  []byte `json:"password_hash" validate:"required"`
+	Password  string `json:"password" validate:"required"`
 }
