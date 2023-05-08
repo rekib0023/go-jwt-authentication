@@ -2,18 +2,16 @@ package main
 
 import (
 	"go-jwt-authentication/database"
+	"go-jwt-authentication/helpers"
 	"go-jwt-authentication/routes"
-	"os"
 
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	port := os.Getenv("PORT")
+	helpers.LoadConfig(".env")
 
-	if port == "" {
-		port = "8000"
-	}
+	AppConfig := helpers.AppConfig
 
 	database.Connect()
 
@@ -21,5 +19,5 @@ func main() {
 	router.Use(gin.Logger())
 	routes.UserRoutes(router)
 
-	router.Run(":" + port)
+	router.Run(":" + AppConfig.PORT)
 }

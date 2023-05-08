@@ -4,19 +4,12 @@ import (
 	"fmt"
 	"log"
 
+	"go-jwt-authentication/helpers"
 	"go-jwt-authentication/models"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-)
-
-const (
-	host     = "localhost"
-	port     = 5433
-	user     = "root"
-	password = "password"
-	dbname   = "go-jwt"
 )
 
 type DbInstance struct {
@@ -26,7 +19,7 @@ type DbInstance struct {
 var Database DbInstance
 
 func Connect() {
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable", host, user, password, dbname, port)
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable", helpers.AppConfig.DB_HOST, helpers.AppConfig.DB_USER, helpers.AppConfig.DB_PASSWORD, helpers.AppConfig.DB_USER, helpers.AppConfig.DB_PORT)
 	fmt.Println(dsn)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
